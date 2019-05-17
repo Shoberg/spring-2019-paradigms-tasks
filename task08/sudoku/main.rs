@@ -7,10 +7,12 @@
 // Намек компилятору, что мы также хотим использовать наш модуль из файла `field.rs`.
 mod field;
 
+extern crate threadpool;
+
 // Чтобы не писать `field::Cell:Empty`, можно "заимпортировать" нужные вещи из модуля.
 use field::Cell::*;
 use field::{parse_field, Field, N};
-use std::sync::mpsc::*;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use threadpool::ThreadPool;
 
 /// Эта функция выполняет один шаг перебора в поисках решения головоломки.
@@ -35,13 +37,13 @@ use threadpool::ThreadPool;
 ///    вернуть `None`, если требуется попробовать ещё одно значение клетки, либо `Some(x)`,
 ///    если перебор следует остановить и вернуть `Some(x)`.
 ///
-/// Замыкание — это просто анонимная функция, которая может захватить какие-нибудь переменные из
+/// Замыкание — это просто анонимная функция, котрая может захватить какие-нибудь переменные из
 /// объемлющей области видимости. Они бывают трёх видов (Rust автоматически его назначает, вам не надо беспокоиться):
 /// 1. `Fn`. Самая строгое, захватывает переменные по иммутабельной ссылке. Может вызываться как угодно.
 /// 2. `FnMut`. Захватывает переменные по мутабельным ссылкам. Может вызываться только по мутабельной ссылке,
 ///     т.к. надо гарантировать, что к захваченным переменным доступ возможен только одним способом.
 /// 3. `FnOnce`. Захватывает владение переменными. Может его кому-нибудь передавать при вызове. Как следствие,
-///     может быть вызвано не больше одного раза, потому что иначе получится передача владения дважды.
+///     может быть вызвано не большо одного раза, потому что иначе получится передача владения дважды.
 /// Разумеется, если какое-то замыкание является `Fn`, то его можно использовать и как будто оно `FnMut` или `FnOnce`.
 ///
 /// Таким образом, тут для каждого параметра надо выбрать самый нестрогий тип замыкания из возможных:
@@ -65,7 +67,7 @@ fn try_extend_field<T>(
     // Ищем первую непустую клетку.
     for row in 0..N {
         for col in 0..N {
-            // Нашли пустую -- начинаем перебирать все, что можно туда поставить
+            // Нашли пустую -- начинем перебирать все, что можно туда поставить
             if f[row][col] == Empty {
                 for d in 1..=N {
                     f[row][col] = Digit(d);
@@ -166,39 +168,36 @@ fn find_solution(f: &mut Field) -> Option<Field> {
     try_extend_field(f, |f_solved| f_solved.clone(), find_solution)
 }
 
-/// Перебирает все возможные решения головоломки, заданной параметром `f`, в несколько потоков.
-/// Если хотя бы одно решение `s` существует, возвращает `Some(s)`,
-/// в противном случае возвращает `None`.
-
-const SPAWN_DEPTH: i32 = 2;
-
-fn spawn_tasks(thread_pool: &ThreadPool, f: &mut Field, tx: &Sender<Option<Field>>, depth: i32) {
-    if depth > 0 {
+fn spawn_tasks(pool: &ThreadPool, tx: &Sender<Option<Field>>, f: &mut Field, depth: i32) {
+    if depth == 0 {
+        let tx = tx.clone();
+        let mut f = f.clone();
+        pool.execute(move || tx.send(find_solution(&mut f)).unwrap_or(()));
+    } else {
         try_extend_field(
             f,
             |f| {
                 tx.send(Some(f.clone())).unwrap_or(());
             },
             |f| {
-                spawn_tasks(&thread_pool, f, &tx, depth - 1);
+                spawn_tasks(pool, tx, f, depth - 1);
                 None
             },
         );
-    } else {
-        let tx = tx.clone();
-        let mut f = f.clone();
-        thread_pool.execute(move || {
-            tx.send(find_solution(&mut f)).unwrap_or(());
-        });
     }
 }
 
+/// Перебирает все возможные решения головоломки, заданной параметром `f`, в несколько потоков.
+/// Если хотя бы одно решение `s` существует, возвращает `Some(s)`,
+/// в противном случае возвращает `None`.
 fn find_solution_parallel(mut f: Field) -> Option<Field> {
-    let (tx, rx) = channel();
-    let thread_pool = ThreadPool::new(8);
-    spawn_tasks(&thread_pool, &mut f, &tx, SPAWN_DEPTH);
+    let (tx, rx): (Sender<Option<Field>>, Receiver<Option<Field>>) = channel();
+    const SPAWN_DEPTH: i32 = 2;
+    let n_threads = 8;
+    let pool = ThreadPool::new(n_threads);
+    spawn_tasks(&pool, &tx, &mut f, SPAWN_DEPTH);
     std::mem::drop(tx);
-    rx.into_iter().find_map(|x| x)
+    rx.into_iter().find_map(|option_f| option_f)
 }
 
 /// Юнит-тест, проверяющий, что `find_solution()` находит лексикографически минимальное решение на пустом поле.
