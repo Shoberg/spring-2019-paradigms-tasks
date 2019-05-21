@@ -2,9 +2,7 @@
   Определение класса типов 'Map'.
 -}
 module Map where
-
-import Data.Maybe (isJust, maybe)
-
+import Data.Maybe
 {-|
   Поведение всех определённых здесь функций должно быть аналогично
   поведению функций из модуля "Data.Map.Strict".
@@ -37,37 +35,37 @@ class Map t where
     insert = insertWith const
 
     insertWith :: Ord k => (a -> a -> a) -> k -> a -> t k a -> t k a
-    insertWith f key a = alter (Just . maybe a (f a)) key
+    insertWith f k v = alter (Just . maybe v (f v)) k
 
     insertWithKey :: Ord k => (k -> a -> a -> a) -> k -> a -> t k a -> t k a
-    insertWithKey f key = insertWith (f key) key
+    insertWithKey f k = insertWith (f k) k
 
     delete :: Ord k => k -> t k a -> t k a
     delete = alter $ const Nothing
 
     adjust :: Ord k => (a -> a) -> k -> t k a -> t k a
-    adjust = alter . fmap
+    adjust f = alter $ fmap f
 
     adjustWithKey :: Ord k => (k -> a -> a) -> k -> t k a -> t k a
-    adjustWithKey f key = adjust (f key) key
+    adjustWithKey f k = adjust (f k) k
 
     update :: Ord k => (a -> Maybe a) -> k -> t k a -> t k a
-    update = alter . maybe Nothing
+    update f = alter $ maybe Nothing f
 
     updateWithKey :: Ord k => (k -> a -> Maybe a) -> k -> t k a -> t k a
-    updateWithKey f key = update (f key) key
+    updateWithKey f k = update (f k) k
 
     alter :: Ord k => (Maybe a -> Maybe a) -> k -> t k a -> t k a
 
     lookup :: Ord k => k -> t k a -> Maybe a
 
     member :: Ord k => k -> t k a -> Bool
-    member key = isJust . Map.lookup key
+    member k = isJust . Map.lookup k
 
     notMember :: Ord k => k -> t k a -> Bool
-    notMember key = not . member key
+    notMember k = not . member k
 
     null :: t k a -> Bool
-    null = (== 0) . size
+    null curmap = size curmap == 0
 
     size :: t k a -> Int
