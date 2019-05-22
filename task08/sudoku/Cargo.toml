@@ -1,0 +1,12 @@
+[package]
+name = "sudoku"
+version = "0.1.0"
+authors = ["edgarzhavoronkov <edzhavoronkov@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+threadpool = "1.7.1"
+
+[[bin]]
+name = "sudoku"
+path = "main.rs"
