@@ -52,4 +52,3 @@ void *threadsafe_queue_wait_and_pop(ThreadsafeQueue *q);
 }
 
 #endif
-

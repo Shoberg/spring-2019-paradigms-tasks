@@ -88,7 +88,8 @@ void *consumer(void *_q) {
         REQUIRE(threadsafe_queue_wait_and_pop(q) == nullptr);
     }
     return nullptr;
-};
+}
+
 
 TEST_CASE("ThreadsafeQueue pushes from multiple threads") {
     ThreadsafeQueue q;
