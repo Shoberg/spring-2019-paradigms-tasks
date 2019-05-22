@@ -10,6 +10,7 @@ data NaiveList k a = Nil | Cons k a (NaiveList k a) deriving (Show, Eq)
 
 {-|
   Реализация функций 'Map' для 'NaiveList'.
+
   'Map.null' реализуется отдельно, чтобы работать за
   /O(1)/, а не /O(n)/, несмотря на то, что его реализация
   по умолчанию доступна в 'Map'.

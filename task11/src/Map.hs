@@ -2,10 +2,12 @@
   Определение класса типов 'Map'.
 -}
 module Map where
+
 import Data.Maybe
 {-|
   Поведение всех определённых здесь функций должно быть аналогично
   поведению функций из модуля "Data.Map.Strict".
+
   Каждую функцию, у которой здесь предложена реализация по умолчанию
   в виде 'undefined', вам требуется выразить через другую функцию из
   класса 'Map', указанную в комментарии. Например, 'fromList'
@@ -27,11 +29,13 @@ class Map t where
     singleton :: k -> a -> t k a
 
     fromList :: Ord k => [(k, a)] -> t k a
+    
     fromList = foldl (flip $ uncurry insert) empty
 
     toAscList :: t k a -> [(k, a)]
 
     insert :: Ord k => k -> a -> t k a -> t k a
+
     insert = insertWith const
 
     insertWith :: Ord k => (a -> a -> a) -> k -> a -> t k a -> t k a
@@ -60,6 +64,7 @@ class Map t where
     lookup :: Ord k => k -> t k a -> Maybe a
 
     member :: Ord k => k -> t k a -> Bool
+
     member k = isJust . Map.lookup k
 
     notMember :: Ord k => k -> t k a -> Bool
@@ -67,5 +72,6 @@ class Map t where
 
     null :: t k a -> Bool
     null curmap = size curmap == 0
+
 
     size :: t k a -> Int
