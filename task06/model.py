@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import abc
 
-
 class Scope:
     def __init__(self, parent=None):
         self.variables = {}
@@ -16,6 +15,8 @@ class Scope:
 
     def __setitem__(self, key, value):
         self.variables[key] = value
+        raise NotImplementedError
+
 
 
 class ASTNode(metaclass=abc.ABCMeta):
@@ -25,6 +26,7 @@ class ASTNode(metaclass=abc.ABCMeta):
         Запускает вычисление текущего узла синтаксического дерева
         в заданной области видимости и возвращает результат вычисления.
         """
+
         pass
 
     @abc.abstractmethod
@@ -77,18 +79,21 @@ class ASTNodeVisitor(metaclass=abc.ABCMeta):
     def visit_unary_operation(self, unary_operation):
         pass
 
-
 class Number(ASTNode):
     """
     Представляет собой константу или значение типа "целое число".
+
     Метод evaluate() всегда возвращает self.
     Number должен содержать поле value, которое будет хранить число,
+
+    Метод evaluate() всегда возвращает self.
+
+    Number должен содержать поле value, которое будет хранить число,
     переданное в конструкторе.
+
     Также Number должен корректно работать с операторами ==, != и его должно
     быть можно положить в словарь в качестве ключа (см. специальные методы
-    __eq__, __ne__, __hash__ — требуется реализовать две из них).
-    """
-
+    __eq__, __ne__, __hash__ — требуется реализовать две из них)
     def __init__(self, value):
         self.value = value
 
@@ -106,14 +111,21 @@ class Number(ASTNode):
             return False
         return self.value == other.value
 
+    def __init__(self, value):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
+
 
 class Function(ASTNode):
     """
     Представляет собой константу или значение типа "функция".
+
     Функция состоит из тела и списка имен аргументов.
     Тело функции — это список выражений, т. е. у каждого объекта в списке
     можно вызвать evaluate.
-    Список имен аргументов - список имен формальных параметров функции.
+
     Аналогично Number, метод evaluate должен возвращать self.
     """
 
@@ -132,11 +144,20 @@ class Function(ASTNode):
             return False
         return self.args == other.args and self.body == other.body
 
+    Аналогично Number, метод evaluate должен возвращать self.
+    """
+    def __init__(self, args, body):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
+
 
 class FunctionDefinition(ASTNode):
     """
     Представляет собой определение функции, т. е. связывает некоторое
     имя с объектом типа Function.
+
     Результатом вычисления FunctionDefinition является побочный эффект -
     обновление текущего Scope,  т.е. в него добавляется новое значение типа
     Function под заданным именем, а возвращать evaluate должен саму функцию.
@@ -157,6 +178,12 @@ class FunctionDefinition(ASTNode):
         if not isinstance(other, FunctionDefinition):
             return False
         return self.name == other.name and self.function == other.function
+
+    def __init__(self, name, function):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
 
 
 class Conditional(ASTNode):
@@ -199,6 +226,24 @@ class Conditional(ASTNode):
                 self.if_true == other.if_true and
                 self.if_false == other.if_false)
 
+    condition - это некоторое выражение, результат вычисления которого
+        обязательно является объектом типа Number.
+    if_true и if_false - списки (возможно, пустые или равные None) выражений.
+
+    Если результат вычисления condition - это объект Number, содержащий 0, то
+    вычисляется if_false список, иначе if_true.
+
+    Результатом вычисления всего Conditional является результат вычисления
+    последнего элемента в соответствующем (if_true или if_false) списке.
+
+    Если соответствующий список пуст или равен None, то возвращаемое значение
+    остается на ваше усмотрение.
+    """
+    def __init__(self, condition, if_true, if_false=None):
+        pass
+
+    def evaluate(self, scope):
+
 
 class Print(ASTNode):
     """
@@ -228,6 +273,22 @@ class Print(ASTNode):
             return False
         return self.expr == other.expr
 
+    В методе evaluate вычисляется значение выражения expr, после чего
+    на экран выводится число, хранящееся внутри результата вычисления (это
+    гарантированно Number).
+
+    Вывод завершается переходом на следующую строку (никаких дополнительных
+    символов, лишнего форматирования, научных форматов, отступов и пр).
+
+    Возвращаемое значение метода evаluate - объект типа Number, который был
+    выведен.
+    """
+    def __init__(self, expr):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
+
 
 class Read(ASTNode):
     """
@@ -255,6 +316,21 @@ class Read(ASTNode):
         if not isinstance(other, Read):
             return False
         return self.name == other.name
+
+    Метод evaluate читает со стандартного потока ввода число (на отдельной
+    строке) и добавляет в scope это число под именем name.
+
+    evaluate должен возвращать объект типа Number, представляющий прочитанное
+    число.
+
+    Каждое входное число располагается на отдельной строке (никаких пустых
+    строк и лишних символов не будет).
+    """
+    def __init__(self, name):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
 
 
 class FunctionCall(ASTNode):
@@ -301,6 +377,11 @@ class FunctionCall(ASTNode):
         if not isinstance(other, FunctionCall):
             return False
         return self.fun_expr == other.fun_expr and self.args == other.args
+    def __init__(self, fun_expr, args):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
 
 
 class Reference(ASTNode):
@@ -324,6 +405,13 @@ class Reference(ASTNode):
             return False
         return self.name == other.name
 
+    def __init__(self, name):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
+
+
 
 class BinaryOperation(ASTNode):
     """
@@ -331,12 +419,22 @@ class BinaryOperation(ASTNode):
     Результатом вычисления бинарной операции является объект Number.
     Поддерживаемые операции: '+', '-', '*', '/', '%', '==', '!=',
     '<', '>', '<=', '>=', '&&', '||'.
+
     lhs и rhs - левое и правое выражения соответственно.
     op - строка с обозначением оператора (все допустимые строки приведены
     выше).
     Метод evaluate должен вычислить значение lhs и rhs, и вернуть Number,
     хранящий значение соответствующей бинарной операции над результатами
     вычисления lhs и rhs.
+
+    lhs и rhs - левое и правое выражения соответственно.
+    op - строка с обозначением оператора (все допустимые строки приведены
+    выше).
+
+    Метод evaluate должен вычислить значение lhs и rhs, и вернуть Number,
+    хранящий значение соответствующей бинарной операции над результатами
+    вычисления lhs и rhs.
+
     Для логических операций и операций сравнения считаем, что Number,
     хранящий 0, соответствует False, а остальные значения соответствуют True.
     Гарантируется, что lhs и rhs при вычислении дадут объект типа Number,
@@ -379,12 +477,19 @@ class BinaryOperation(ASTNode):
                 self.op == other.op and
                 self.rhs == other.rhs)
 
+    def __init__(self, lhs, op, rhs):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError
+
 
 class UnaryOperation(ASTNode):
     """
     Представляет унарную операцию над выражением.
     Результатом вычисления унарной операции является объект Number.
     Поддерживаемые операции: '-', '!' (логическое отрицание, а не факториал).
+
     Метод evaluate должен вычислить expr, и вернуть Number, хранящий значение
     соответствующей унарной операции над результатом вычисления expr.
     Как и для BinaryOperation, Number, хранящий 0, считаем за False, а все
@@ -412,3 +517,9 @@ class UnaryOperation(ASTNode):
             return False
         return self.op == other.op and self.expr == other.expr
 
+
+    def __init__(self, op, expr):
+        pass
+
+    def evaluate(self, scope):
+        raise NotImplementedError

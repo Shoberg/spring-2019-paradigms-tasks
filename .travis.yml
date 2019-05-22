@@ -1,0 +1,37 @@
+# Not 'language: python' because there will be projects in multiple languages.
+language: minimal
+dist: xenial
+
+cache:
+- pip
+- cargo
+install:
+- sudo add-apt-repository ppa:deadsnakes/ppa -y # python3.7 is unavailable in Xenial
+- sudo apt-get update
+- sudo apt-get install python3.7 valgrind clang-format
+- virtualenv --python=python3.7 .py37
+- source .py37/bin/activate
+- python --version
+- pip install -r requirements.txt -r requirements-dev.txt
+- curl https://sh.rustup.rs -sSf | sh -s -- -v -y
+- source $HOME/.cargo/env
+- rustup component add rustfmt
+script:
+- find task?? -iname '*.py' | xargs pycodestyle --show-source
+- find task?? -iname '*.py' -not -iname 'test_*.py' | xargs -n 1 mypy
+- pytest task02
+- pytest task03
+- pytest task04
+- pytest task06
+- pushd task08/sudoku
+- cargo fmt --all -- --check
+- cargo build --verbose
+- cargo test --verbose
+- test -z "$(cargo test --verbose 2>&1 | grep panic)"
+- ./target/debug/sudoku < ../tests/03-medium.in
+- popd
+- pushd task09/
+- diff -u <(cat src/*) <(clang-format -style=file src/*)
+- cmake . && make
+- valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ./queue_test
+- popd
