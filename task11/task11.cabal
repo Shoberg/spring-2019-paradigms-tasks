@@ -1,0 +1,26 @@
+cabal-version:       >=1.10
+
+name:                task11
+version:             0.1.0.0
+build-type:          Simple
+
+library
+    exposed-modules:     Map, MapInstance, NaiveList, NaiveTree
+    build-depends:
+        base >=4.11
+        , containers >= 0.6.0.1
+    ghc-options:         -Wall -Werror -Wextra -fno-warn-incomplete-patterns -fno-warn-orphans
+    hs-source-dirs:      src
+    default-language:    Haskell2010
+
+test-suite map
+    default-language:    Haskell2010
+    type:                exitcode-stdio-1.0
+    hs-source-dirs:      test
+    main-is:             TestMap.hs
+    build-depends:
+        base >=4.11
+        , containers >= 0.6.0.1
+        , tasty >= 0.8
+        , tasty-hunit >= 0.10
+        , task11
