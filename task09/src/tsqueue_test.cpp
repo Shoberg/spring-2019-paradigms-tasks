@@ -2,7 +2,7 @@
 #include "tsqueue.h"
 #include "doctest.h"
 
-const int ELEMENTS_PER_THREAD = 1000 * 1000;
+const int ELEMENTS_PER_THREAD = 100 * 1000;
 const int REPEATS = 3;
 
 TEST_CASE("ThreadsafeQueue works like Queue in a single thread") {
@@ -42,32 +42,18 @@ TEST_CASE("ThreadsafeQueue multithreaded ping-pong") {
 
     auto pinger = [](void *_qs) -> void * {
         ThreadsafeQueue *qs = static_cast<ThreadsafeQueue *>(_qs);
-        for (int i = 0; i < PING_PONGS; ++i) {
-            int var = 12345;
-            threadsafe_queue_push(&qs[0], &var);
-            int *ptr =
-                static_cast<int *>(threadsafe_queue_wait_and_pop(&qs[1]));
-            REQUIRE(var == 12346);
-            REQUIRE(ptr == &var);
-        }
+        // TODO
+        static_cast<void>(qs);  // Используем переменную как-нибудь.
+        static_cast<void>(PING_PONGS);  // Используем переменную как-нибудь.
         return nullptr;
     };
 
-    auto ponger = [](void *_qs) -> void * {
-        ThreadsafeQueue *qs = static_cast<ThreadsafeQueue *>(_qs);
-        for (int i = 0; i < PING_PONGS; ++i) {
-            int *ptr =
-                static_cast<int *>(threadsafe_queue_wait_and_pop(&qs[0]));
-            ++*ptr;
-            threadsafe_queue_push(&qs[1], ptr);
-        }
-        return nullptr;
-    };
+    // TODO
 
     pthread_t t1, t2;
     REQUIRE(pthread_create(&t1, nullptr, pinger, qs) == 0);
-    REQUIRE(pthread_create(&t2, nullptr, ponger, qs) == 0);
-    REQUIRE(pthread_join(t2, nullptr) == 0);
+    // TODO
+    static_cast<void>(t2);
     REQUIRE(pthread_join(t1, nullptr) == 0);
 
     threadsafe_queue_destroy(&qs[1]);
@@ -89,7 +75,6 @@ void *consumer(void *_q) {
     }
     return nullptr;
 }
-
 
 TEST_CASE("ThreadsafeQueue pushes from multiple threads") {
     ThreadsafeQueue q;
