@@ -10,7 +10,7 @@ testsBasics :: TestTree
 testsBasics = testGroup "Unit tests for Basics tasks"
     [testCase "head' works on non-empty list" $
         head' [1,2,3] @?= 1
-
+        
     , testCase "head' works on infinite list" $
         head' [1..] @?= 1
 
