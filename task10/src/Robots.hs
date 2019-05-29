@@ -35,6 +35,7 @@ getHealth (_, _, myHealth) = myHealth
 -- состояние робота
 
 setName :: Name -> Robot -> Robot
+
 setName newName (_, myAttack, myHealth) = robot newName myAttack myHealth
 
 setAttack :: Attack -> Robot -> Robot

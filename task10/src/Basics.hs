@@ -17,7 +17,6 @@ tail' (_:xs) = xs
 take' :: Int -> [a] -> [a]
 take' 0 _      = []
 take' n (x:xs) = x : take' (n - 1) xs
-
 -- 4. drop' возвращает список без первых n >= 0 элементов; если n больше длины
 -- списка, то пустой список.
 drop' :: Int -> [a] -> [a]
@@ -36,12 +35,14 @@ filter' f (x:xs) | f x       = x : filter' f xs
 -- foldl'' (+) 0 [1, 2, 3] == (((0 + 1) + 2) + 3)
 -- foldl'' (*) 4 [] == 4
 foldl'' :: (a -> b -> a) -> a -> [b] -> a
+
 foldl'' _ z []     = z
 foldl'' f z (x:xs) = foldl'' f (f z x) xs
 
 -- 7. concat' принимает на вход два списка и возвращает их конкатенацию
 -- concat' [1,2] [3] == [1,2,3]
 concat' :: [a] -> [a] -> [a]
+
 concat' []     ys = ys
 concat' (x:xs) ys = x : concat' xs ys
 

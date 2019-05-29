@@ -13,9 +13,12 @@ Print the above list in order sorted by word (python will sort punctuation to
 come before letters -- that's fine). Store all the words as lowercase,
 so 'The' and 'the' count as the same word.
 
-2. For the --topcount flag, implement a print_top(filename) which is similar
-to print_words() but which prints just the top 20 most common words sorted
-so the most common word is first, then the next most common, and so on.
+2. For the --topcount flag, implement a print_top(filename) which prints just
+the top 20 most common words sorted so the most common word is first, then the
+next most common, and so on:
+word1
+word2
+...
 
 Use str.split() (no arguments) to split on all whitespace.
 
@@ -29,6 +32,7 @@ print_words() and print_top().
 """
 
 import sys
+
 
 def read_words(filename):
     words = []
@@ -46,6 +50,8 @@ def read_words(filename):
 
 # This basic command line argument parsing code is provided and
 # calls the print_words() and print_top() functions which you must define.
+
+
 def main():
     if len(sys.argv) != 3:
         print('usage: ./wordcount.py {--count | --topcount} file')
@@ -60,6 +66,7 @@ def main():
     else:
         print('unknown option: ' + option)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()
